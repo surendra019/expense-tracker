@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Expense Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500&family=Open+Sans&family=Poppins:wght@300&display=swap');
+
+        @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding&display=swap');
+
+        :root {
+            --font-primary: 'Poppins', sans-serif;
+            --font-secondary: 'Nanum Gothic Coding', cursive;
+            --color-primary: #12486B;
+            --color-secondary: #419197;
+            --color-tertiary: #78D6C6;
+        }
+
+        html {
+            height: 100%;
+            width: 100%;
+        }
+
+        @media only screen and (max-width: 420px) {
+            .btn{
+                margin: 5px;
+}
+            
+        }
+        
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Expense Tracker</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="#">Home</a>
+                    </li>
+
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-xl py-5">
+        <form class="card" action="/submit" method="POST">
+            <div class="container px-5 py-5">
+                <div class="mb-3">
+                    <label for="formGroupExampleInput" class="form-label">Expenditure</label>
+                    <input type="number" class="form-control" id="num_input" name="num_input" placeholder="Enter your expenditure">
+                </div>
+                <div class="mb-3">
+                    <label for="formGroupExampleInput2" class="form-label">Message</label>
+                    <input type="text" class="form-control" name="msg_input" id="msg_input"
+                        placeholder="Enter the message for your expenditure">
+                </div>
+                <div id="buttons btn-group">
+                    <input type="submit" class="btn btn-primary" value="Submit" onclick="onSubmit()">
+                    <input type="reset" class="btn btn-primary" value="Reset">
+
+                    <button onclick="showExpenses()" class="btn btn-primary" type="button" id="show_btn">show</button>
+                    <button onclick="clearRecord()" class="btn btn-primary" type="button" id="clear_btn">clear</button>
+                    <button onclick="clearList()" class="btn btn-primary" type="button"
+                        id="clear_list_btn">clean</button>
+                </div>
+            </div>
+
+
+        </form>
+
+    </div>
+
+
+    <ul id="list_parent" styles="color: black;"class="card"></ul>
+
+    <!-- <button type="button" class="btn btn-primary" id="liveToastBtn">Show live toast</button> -->
+    <div id="toast_container">
+
+    </div>
+
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"></script>
+    <script>
+        const data_id = prompt("Enter data id to continue: (if new then create one)");
+        
+        let btn = document.getElementById('show_btn');
+        function onSubmit() {
+            if (are_entries_filled()) {
+                showToast("submission successfull");
+            } else {
+                showToast('enter data first!')
+            }
+        };
+
+        function clearList() {
+
+            let list_parent = document.getElementById('list_parent');
+            list_parent.innerHTML = "";
+            showToast('list cleared successfully.')
+        }
+        function are_entries_filled() {
+            let entries_filled;
+            let amt_input = document.getElementById('num_input');
+            let msg_input = document.getElementById('msg_input');
+            if (amt_input.value != "" && msg_input.value != "") {
+                entries_filled = true;
+            }
+            else {
+                entries_filled = false;
+            }
+            return entries_filled;
+        }
+
+
+        function showExpenses() {
+            let list_parent = document.getElementById('list_parent');
+            list_parent.innerHTML="";
+            fetch('/getexpense').then(async (res) => {
+
+                let final_json = await res.json();
+                if (Object.keys(final_json).length > 0) {
+                    showToast('showing expenses...')
+                    Object.keys(final_json).forEach((item) => {
+                        let li_el = document.createElement('li');
+                        li_el.innerHTML = `Rs. ${final_json[item].amt} - ${final_json[item].msg}`
+                        li_el.classList.add('items');
+                        // showToast(`Rs. ${final_json[item].amt} - ${final_json[item].msg}`, li_el)
+                        let list_parent = document.getElementById('list_parent');
+                        list_parent.appendChild(li_el);
+
+                    })
+                } else {
+                    showToast('Nothing to show!');
+                }
+            });
+
+        }
+
+        function getToast(msg){
+            return `<div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <!-- <img src="..." class="rounded me-2" alt="..."> -->
+                <strong class="me-auto">Expense Tracker</strong>
+                <!-- <small>11 mins ago</small> -->
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                ${msg}
+            </div>
+        </div>
+    </div>`
+        }
+        function clearRecord() {
+            fetch('/clear').then(async (res) => {
+                let status = await res.text();
+
+                if (status == 'success') {
+                    showToast('expenses cleared successfully!')
+                } else if (status == 'empty') {
+                    showToast('No data!')
+                }
+            });
+        }
+
+        
+        
+        const toastContainer = document.getElementById('toast_container')
+
+        
+
+        const showToast = (msg)=>{
+
+            const toastCode = getToast(msg);
+            toastContainer.innerHTML = toastCode
+            console.log(toastContainer.innerHTML)
+          
+            const toastLiveExample = document.getElementById('liveToast')
+            const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastLiveExample)
+            toastBootstrap.show()
+            
+        }
+        
+    </script>
+
+
+    
+</body>
+
+</html>
